@@ -49,6 +49,28 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+def download_model_from_url(url, save_path):
+    """Download model from URL if it doesn't exist."""
+    import urllib.request
+    import ssl
+    
+    if os.path.exists(save_path):
+        return True
+    
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    
+    try:
+        # Create SSL context to handle HTTPS
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        
+        urllib.request.urlretrieve(url, save_path)
+        return True
+    except Exception as e:
+        st.warning(f"Could not download model from URL: {e}")
+        return False
+
 @st.cache_resource
 def load_model():
     """Load the trained model."""
@@ -74,6 +96,15 @@ def load_model():
         if os.path.exists(path):
             model_path = path
             break
+    
+    # If model not found, try downloading from URL (if configured)
+    if not model_path:
+        # Check for model URL in secrets or environment
+        model_url = os.environ.get('MODEL_URL') or st.secrets.get('MODEL_URL', None)
+        if model_url:
+            default_path = "checkpoints/best_model.pth"
+            if download_model_from_url(model_url, default_path):
+                model_path = default_path
     
     if model_path:
         try:
