@@ -62,12 +62,28 @@ def load_model():
         out_channels=model_config.out_channels
     )
     
-    model_path = "checkpoints/best_model.pth"
-    if os.path.exists(model_path):
-        model.load_state_dict(torch.load(model_path, map_location=device))
-        model = model.to(device)
-        model.eval()
-        return model, device
+    # Try multiple possible paths for the model
+    model_paths = [
+        "checkpoints/best_model.pth",
+        "../checkpoints/best_model.pth",
+        os.path.join(os.path.dirname(__file__), "..", "checkpoints", "best_model.pth")
+    ]
+    
+    model_path = None
+    for path in model_paths:
+        if os.path.exists(path):
+            model_path = path
+            break
+    
+    if model_path:
+        try:
+            model.load_state_dict(torch.load(model_path, map_location=device))
+            model = model.to(device)
+            model.eval()
+            return model, device
+        except Exception as e:
+            st.error(f"Error loading model: {e}")
+            return None, device
     else:
         return None, device
 
@@ -157,8 +173,23 @@ def main():
     model, device = load_model()
     
     if model is None:
-        st.error("⚠️ Model not found! Please ensure 'checkpoints/best_model.pth' exists.")
-        st.info("To train the model, run: `python -m src.train`")
+        st.error("⚠️ Model not found!")
+        st.info("""
+        **To use this demo, you need a trained model.**
+        
+        **Option 1: Train the model locally**
+        ```bash
+        python -m src.train
+        ```
+        Then upload the `checkpoints/best_model.pth` file to your deployment.
+        
+        **Option 2: Download pre-trained model**
+        If you have a model URL, it can be configured to download automatically.
+        
+        **Note:** For Streamlit Cloud deployment, you'll need to add the model file 
+        to your repository or use a cloud storage service.
+        """)
+        st.stop()
         return
     
     # Main content
