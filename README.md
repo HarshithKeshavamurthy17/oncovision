@@ -27,6 +27,7 @@ This project is designed for medical image analysis and can be used as a tool to
 - **Comprehensive Metrics**: Dice Score, IoU, Precision, and Recall for each class
 - **Easy to Use**: Modular codebase with configuration-based training and inference
 - **Production Ready**: Clean code structure suitable for portfolio and deployment
+- **Interactive Demo**: Web-based Streamlit and Gradio interfaces for real-time predictions
 
 ## 🚀 Installation
 
@@ -78,6 +79,20 @@ This project is designed for medical image analysis and can be used as a tool to
    ```
 
 ## 📖 Usage
+
+### 🚀 Live Demo
+
+Try the interactive web demo:
+
+```bash
+# Streamlit Demo
+streamlit run demo/app.py
+
+# Or Gradio Demo
+python demo/gradio_app.py
+```
+
+For deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ### Training
 
