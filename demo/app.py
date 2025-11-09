@@ -203,25 +203,36 @@ def main():
     # Load model
     model, device = load_model()
     
-    if model is None:
-        st.error("⚠️ Model not found!")
-        st.info("""
-        **To use this demo, you need a trained model.**
-        
-        **Option 1: Train the model locally**
-        ```bash
-        python -m src.train
-        ```
-        Then upload the `checkpoints/best_model.pth` file to your deployment.
-        
-        **Option 2: Download pre-trained model**
-        If you have a model URL, it can be configured to download automatically.
-        
-        **Note:** For Streamlit Cloud deployment, you'll need to add the model file 
-        to your repository or use a cloud storage service.
-        """)
-        st.stop()
-        return
+    # Check if we should use demo mode
+    use_demo_mode = model is None
+    if use_demo_mode:
+        st.warning("🎭 **Demo Mode**: Model not found. Using simulated predictions for demonstration.")
+        st.info("💡 To use real predictions, train the model and add `checkpoints/best_model.pth`")
+    
+    # Demo mode prediction function
+    def create_demo_prediction(image_array, image_size=(256, 256)):
+        """Create demo prediction when model is not available."""
+        if len(image_array.shape) == 3:
+            gray = cv2.cvtColor(image_array, cv2.COLOR_RGB2GRAY)
+        else:
+            gray = image_array
+        resized = cv2.resize(gray, image_size, interpolation=cv2.INTER_AREA)
+        normalized = resized.astype(np.float32) / 255.0
+        threshold = np.percentile(normalized, 75)
+        mask = np.zeros(image_size, dtype=np.int32)
+        mask[(normalized >= threshold * 0.7) & (normalized < threshold * 1.2)] = 1
+        mask[normalized >= threshold * 1.2] = 2
+        mask = cv2.GaussianBlur(mask.astype(np.float32), (15, 15), 0)
+        mask = np.round(mask).astype(np.int32)
+        prob_bg = np.mean(mask == 0)
+        prob_benign = np.mean(mask == 1)
+        prob_malignant = np.mean(mask == 2)
+        probabilities = np.array([
+            np.full(image_size, prob_bg),
+            np.full(image_size, prob_benign),
+            np.full(image_size, prob_malignant)
+        ])
+        return mask, probabilities
     
     # Main content
     col1, col2 = st.columns([1, 1])
@@ -244,11 +255,17 @@ def main():
             # Process and predict
             if st.button("🔍 Analyze Image", type="primary"):
                 with st.spinner("Processing image..."):
-                    # Preprocess
-                    image_tensor, processed_image = preprocess_image(image_array)
-                    
-                    # Predict
-                    prediction, probabilities = predict(model, image_tensor, device)
+                    if use_demo_mode:
+                        # Use demo mode prediction
+                        prediction, probabilities = create_demo_prediction(image_array)
+                        processed_image = cv2.resize(
+                            cv2.cvtColor(image_array, cv2.COLOR_RGB2GRAY) if len(image_array.shape) == 3 else image_array,
+                            (256, 256)
+                        ).astype(np.float32) / 255.0
+                    else:
+                        # Use real model prediction
+                        image_tensor, processed_image = preprocess_image(image_array)
+                        prediction, probabilities = predict(model, image_tensor, device)
                     
                     # Visualize
                     colored_mask, overlay = create_visualization(
