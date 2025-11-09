@@ -387,44 +387,157 @@ def main():
                     st.rerun()
     
     with col2:
-        st.header("📊 Results")
+        st.header("📊 Analysis Results")
         
         if 'prediction' in st.session_state:
-            # Display overlay
-            st.image(st.session_state['overlay'], caption="Segmentation Overlay", use_container_width=True)
-            
-            # Display mask
-            st.image(st.session_state['mask'], caption="Segmentation Mask", use_container_width=True)
-            
-            # Statistics
-            st.subheader("📈 Statistics")
             prediction = st.session_state['prediction']
             probabilities = st.session_state['probabilities']
             
+            # Calculate statistics
             total_pixels = prediction.size
             benign_pixels = np.sum(prediction == 1)
             malignant_pixels = np.sum(prediction == 2)
             background_pixels = np.sum(prediction == 0)
             
-            col_a, col_b, col_c = st.columns(3)
-            with col_a:
-                st.metric("Background", f"{background_pixels/total_pixels*100:.1f}%")
-            with col_b:
-                st.metric("Benign", f"{benign_pixels/total_pixels*100:.1f}%", 
-                         delta="Normal tissue" if benign_pixels > 0 else None)
-            with col_c:
-                st.metric("Malignant", f"{malignant_pixels/total_pixels*100:.1f}%",
-                         delta="⚠️" if malignant_pixels > 0 else None,
-                         delta_color="inverse" if malignant_pixels > 0 else "normal")
+            benign_percent = benign_pixels/total_pixels*100
+            malignant_percent = malignant_pixels/total_pixels*100
+            background_percent = background_pixels/total_pixels*100
             
-            # Probability distribution
-            st.subheader("🎯 Class Probabilities")
+            # Main prediction summary
+            st.markdown("### 🎯 Prediction Summary")
+            
+            # Determine primary finding
+            if malignant_percent > 5:
+                st.error(f"⚠️ **Potential Malignant Tissue Detected** ({malignant_percent:.1f}% of image)")
+                st.warning("**Interpretation:** The model has identified regions that may indicate malignant (cancerous) tissue. This requires medical evaluation.")
+            elif benign_percent > 30:
+                st.success(f"✅ **Benign Tissue Detected** ({benign_percent:.1f}% of image)")
+                st.info("**Interpretation:** The model has identified benign (non-cancerous) tissue regions. This is typically normal tissue.")
+            else:
+                st.info("📋 **Background Tissue Predominant** ({background_percent:.1f}% of image)")
+                st.info("**Interpretation:** The image primarily contains background/normal tissue with no significant abnormalities detected.")
+            
+            st.markdown("---")
+            
+            # Visualizations with clear labels
+            st.markdown("### 🖼️ Visual Results")
+            
+            st.markdown("**1. Segmentation Overlay:**")
+            st.caption("The original image with colored overlays showing predicted tissue types")
+            st.image(st.session_state['overlay'], use_container_width=True)
+            
+            st.markdown("**2. Segmentation Mask:**")
+            st.caption("Color-coded mask showing only the predicted regions (Green=Benign, Red=Malignant, Black=Background)")
+            st.image(st.session_state['mask'], use_container_width=True)
+            
+            # Color legend
+            st.markdown("""
+            <div style='background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 10px 0;'>
+                <strong>Color Legend:</strong><br>
+                🟢 <strong>Green</strong> = Benign tissue (non-cancerous)<br>
+                🔴 <strong>Red</strong> = Malignant tissue (potentially cancerous)<br>
+                ⚫ <strong>Black</strong> = Background/normal tissue
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            
+            # Detailed Statistics
+            st.markdown("### 📈 Detailed Statistics")
+            st.markdown("""
+            **What this means:** The percentages below show how much of the image area was classified as each tissue type.
+            """)
+            
+            col_a, col_b, col_c = st.columns(3)
+            
+            with col_a:
+                st.markdown("**Background Tissue**")
+                st.metric("", f"{background_percent:.1f}%", 
+                         help="Normal/background tissue - no abnormalities")
+                st.caption(f"{background_pixels:,} pixels")
+            
+            with col_b:
+                st.markdown("**Benign Tissue**")
+                st.metric("", f"{benign_percent:.1f}%",
+                         delta="Detected" if benign_pixels > 0 else None,
+                         delta_color="normal",
+                         help="Non-cancerous tissue - typically normal")
+                st.caption(f"{benign_pixels:,} pixels")
+            
+            with col_c:
+                st.markdown("**Malignant Tissue**")
+                st.metric("", f"{malignant_percent:.1f}%",
+                         delta="⚠️ Detected" if malignant_pixels > 0 else "None",
+                         delta_color="inverse" if malignant_pixels > 0 else "off",
+                         help="Potentially cancerous tissue - requires medical evaluation")
+                st.caption(f"{malignant_pixels:,} pixels")
+            
+            st.markdown("---")
+            
+            # Class Probabilities with explanation
+            st.markdown("### 🎯 Model Confidence (Class Probabilities)")
+            st.markdown("""
+            **What this shows:** The model's confidence level for each tissue type classification.
+            Higher values indicate the model is more confident about that classification.
+            """)
+            
             prob_dict = {
                 "Background": float(probabilities[0].mean()),
                 "Benign": float(probabilities[1].mean()),
                 "Malignant": float(probabilities[2].mean())
             }
-            st.bar_chart(prob_dict)
+            
+            # Create a more informative chart
+            chart_data = {
+                "Tissue Type": list(prob_dict.keys()),
+                "Probability": list(prob_dict.values())
+            }
+            st.bar_chart(chart_data, x="Tissue Type", y="Probability", height=300)
+            
+            # Interpretation of probabilities
+            st.markdown("""
+            <div style='background-color: #e3f2fd; padding: 15px; border-radius: 5px; margin-top: 10px;'>
+                <strong>📊 Probability Interpretation:</strong><br>
+                • <strong>Background ({:.1%})</strong>: Confidence that this region is normal background tissue<br>
+                • <strong>Benign ({:.1%})</strong>: Confidence that this region contains benign (non-cancerous) tissue<br>
+                • <strong>Malignant ({:.1%})</strong>: Confidence that this region may contain malignant (cancerous) tissue
+            </div>
+            """.format(
+                prob_dict["Background"],
+                prob_dict["Benign"],
+                prob_dict["Malignant"]
+            ), unsafe_allow_html=True)
+            
+            st.markdown("---")
+            
+            # Key findings summary
+            st.markdown("### 🔍 Key Findings")
+            
+            findings = []
+            if malignant_percent > 5:
+                findings.append(f"⚠️ **Malignant tissue detected** in {malignant_percent:.1f}% of the image - Medical evaluation recommended")
+            if benign_percent > 30:
+                findings.append(f"✅ **Benign tissue identified** in {benign_percent:.1f}% of the image - Appears normal")
+            if background_percent > 50:
+                findings.append(f"📋 **Background tissue** comprises {background_percent:.1f}% of the image - Normal tissue")
+            
+            if findings:
+                for finding in findings:
+                    st.markdown(f"• {finding}")
+            else:
+                st.info("No significant findings detected in this analysis.")
+            
+            st.markdown("---")
+            
+            # Important notes
+            st.markdown("### ⚠️ Important Notes")
+            st.warning("""
+            **Medical Disclaimer:**
+            - This analysis is for **educational and research purposes only**
+            - Results are **NOT a medical diagnosis**
+            - **Always consult** qualified healthcare professionals for medical decisions
+            - This tool is a demonstration and should not be used for clinical purposes
+            """)
         else:
             st.markdown("### 👋 Welcome to OncoVision!")
             st.markdown("""
