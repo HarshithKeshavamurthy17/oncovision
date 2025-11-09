@@ -239,18 +239,52 @@ def main():
     
     with col1:
         st.header("📤 Upload Image")
+        
+        # Check if test images are available
+        test_dir = "data/test"
+        example_images = []
+        if os.path.exists(test_dir):
+            example_images = [f for f in os.listdir(test_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+            example_images.sort()
+        
+        # Example image selector
+        if example_images:
+            st.info(f"💡 **{len(example_images)} example images available!** Try one below or upload your own.")
+            col_ex1, col_ex2 = st.columns(2)
+            with col_ex1:
+                if st.button("📷 Try Example Image 1", use_container_width=True):
+                    example_path = os.path.join(test_dir, example_images[0])
+                    st.session_state['use_example'] = example_path
+            with col_ex2:
+                if len(example_images) > 1 and st.button("📷 Try Example Image 2", use_container_width=True):
+                    example_path = os.path.join(test_dir, example_images[1])
+                    st.session_state['use_example'] = example_path
+        
         uploaded_file = st.file_uploader(
-            "Choose a breast ultrasound image",
+            "Or upload your own breast ultrasound image",
             type=['png', 'jpg', 'jpeg'],
             help="Upload a grayscale or color breast ultrasound image"
         )
+        
+        # Handle example image
+        if 'use_example' in st.session_state and st.session_state['use_example']:
+            example_path = st.session_state['use_example']
+            if os.path.exists(example_path):
+                uploaded_file = open(example_path, 'rb')
+                st.success(f"✅ Using example: {os.path.basename(example_path)}")
         
         if uploaded_file is not None:
             # Read image
             image = Image.open(uploaded_file)
             image_array = np.array(image)
             
-            st.image(image, caption="Uploaded Image", use_container_width=True)
+            # Determine caption
+            if 'use_example' in st.session_state and st.session_state['use_example']:
+                caption = f"Example Image: {os.path.basename(st.session_state['use_example'])}"
+            else:
+                caption = "Uploaded Image"
+            
+            st.image(image, caption=caption, use_container_width=True)
             
             # Process and predict
             if st.button("🔍 Analyze Image", type="primary"):
@@ -278,6 +312,9 @@ def main():
                     st.session_state['overlay'] = overlay
                     st.session_state['mask'] = colored_mask
                     st.session_state['original'] = processed_image
+                    # Clear example flag after use
+                    if 'use_example' in st.session_state:
+                        del st.session_state['use_example']
                     st.rerun()
     
     with col2:
@@ -320,7 +357,30 @@ def main():
             }
             st.bar_chart(prob_dict)
         else:
-            st.info("👆 Upload an image and click 'Analyze Image' to see results")
+            st.info("👆 **Try it now!**")
+            st.markdown("""
+            **Option 1:** Click "Try Example Image" buttons above to test with sample images  
+            **Option 2:** Upload your own breast ultrasound image  
+            **Option 3:** Upload any image to see how the segmentation works
+            """)
+            
+            # Show preview of what to expect
+            if example_images:
+                st.markdown("---")
+                st.markdown("### 📸 Sample Images Available")
+                # Show thumbnails of first few examples
+                cols = st.columns(min(3, len(example_images)))
+                for idx, img_name in enumerate(example_images[:3]):
+                    with cols[idx % 3]:
+                        img_path = os.path.join(test_dir, img_name)
+                        if os.path.exists(img_path):
+                            try:
+                                preview_img = Image.open(img_path)
+                                # Resize for thumbnail
+                                preview_img.thumbnail((150, 150))
+                                st.image(preview_img, caption=img_name, use_container_width=True)
+                            except:
+                                pass
     
     # Footer
     st.markdown("---")
