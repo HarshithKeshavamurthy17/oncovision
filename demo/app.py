@@ -171,6 +171,12 @@ def main():
     st.markdown('<h1 class="main-header">🔬 OncoVision</h1>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">Deep Learning-based Breast Ultrasound Image Segmentation</p>', unsafe_allow_html=True)
     
+    # Load model FIRST before sidebar uses use_demo_mode
+    model, device = load_model()
+    
+    # Check if we should use demo mode
+    use_demo_mode = model is None
+    
     # Sidebar
     with st.sidebar:
         st.header("🔬 About OncoVision")
@@ -238,12 +244,6 @@ def main():
             <p>PyTorch • Streamlit • Deep Learning</p>
         </div>
         """, unsafe_allow_html=True)
-    
-    # Load model
-    model, device = load_model()
-    
-    # Check if we should use demo mode
-    use_demo_mode = model is None
     if use_demo_mode:
         st.markdown("""
         <div style='background-color: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; margin-bottom: 20px;'>
