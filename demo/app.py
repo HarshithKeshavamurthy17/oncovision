@@ -234,18 +234,18 @@ def main():
         ])
         return mask, probabilities
     
+    # Check if test images are available
+    test_dir = "data/test"
+    example_images = []
+    if os.path.exists(test_dir):
+        example_images = [f for f in os.listdir(test_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        example_images.sort()
+    
     # Main content
     col1, col2 = st.columns([1, 1])
     
     with col1:
         st.header("📤 Upload Image")
-        
-        # Check if test images are available
-        test_dir = "data/test"
-        example_images = []
-        if os.path.exists(test_dir):
-            example_images = [f for f in os.listdir(test_dir) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
-            example_images.sort()
         
         # Example image selector
         if example_images:
