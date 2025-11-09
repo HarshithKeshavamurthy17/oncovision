@@ -173,32 +173,71 @@ def main():
     
     # Sidebar
     with st.sidebar:
-        st.header("📋 About")
+        st.header("🔬 About OncoVision")
         st.markdown("""
         **OncoVision** is an AI-powered tool for automated segmentation of breast ultrasound images.
         
-        ### Features:
-        - Multi-class segmentation (Background, Benign, Malignant)
-        - Real-time predictions
-        - Visual overlay of results
+        ### 🎯 What It Does:
+        - **Segments** breast ultrasound images into different tissue types
+        - **Identifies** benign tumors (green), malignant tumors (red), and background tissue
+        - **Provides** real-time predictions with visual overlays
         
-        ### Model:
-        - Architecture: U-Net with ResNet50 encoder
-        - Training: Combined Dice-Focal Loss
-        - Input: Grayscale ultrasound images
+        ### 🚀 How to Use:
+        1. **Try an example** - Click any "Example" button above (no upload needed!)
+        2. **Or upload** your own breast ultrasound image
+        3. **Click "Analyze Image"** to see segmentation results
+        4. **View results** - See colored overlays and statistics
+        
+        ### 🧠 Technical Details:
+        - **Architecture:** U-Net with ResNet50 encoder
+        - **Training:** Combined Dice-Focal Loss
+        - **Input:** Grayscale ultrasound images
+        - **Output:** Multi-class segmentation mask
         """)
         
-        st.header("⚠️ Disclaimer")
+        st.markdown("---")
+        
+        st.header("📊 Current Status")
+        if use_demo_mode:
+            st.warning("""
+            **Demo Mode Active**
+            
+            Using simulated predictions for demonstration. 
+            To enable real AI predictions, train the model.
+            """)
+        else:
+            st.success("""
+            **Model Loaded**
+            
+            Real AI predictions are active!
+            """)
+        
+        st.markdown("---")
+        
+        st.header("⚠️ Important Disclaimer")
         st.warning("""
-        This tool is for educational and research purposes only. 
-        Not intended for clinical diagnosis.
+        ⚠️ **For Educational & Research Purposes Only**
+        
+        This tool is not intended for clinical diagnosis or medical decision-making.
+        Always consult healthcare professionals for medical advice.
         """)
         
-        st.header("🔗 Links")
+        st.markdown("---")
+        
+        st.header("🔗 Resources")
         st.markdown("""
-        - [GitHub Repository](https://github.com/HarshithKeshavamurthy17/oncovision)
-        - [Documentation](https://github.com/HarshithKeshavamurthy17/oncovision#readme)
+        - 📁 [GitHub Repository](https://github.com/HarshithKeshavamurthy17/oncovision)
+        - 📖 [Documentation](https://github.com/HarshithKeshavamurthy17/oncovision#readme)
+        - 💻 [Source Code](https://github.com/HarshithKeshavamurthy17/oncovision)
         """)
+        
+        st.markdown("---")
+        st.markdown("""
+        <div style='text-align: center; color: #666; font-size: 0.9em;'>
+            <p>Built with ❤️ using</p>
+            <p>PyTorch • Streamlit • Deep Learning</p>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Load model
     model, device = load_model()
@@ -206,8 +245,15 @@ def main():
     # Check if we should use demo mode
     use_demo_mode = model is None
     if use_demo_mode:
-        st.warning("🎭 **Demo Mode**: Model not found. Using simulated predictions for demonstration.")
-        st.info("💡 To use real predictions, train the model and add `checkpoints/best_model.pth`")
+        st.markdown("""
+        <div style='background-color: #fff3cd; padding: 15px; border-radius: 5px; border-left: 4px solid #ffc107; margin-bottom: 20px;'>
+            <strong>🎭 Demo Mode Active</strong><br>
+            This demo uses simulated predictions to showcase the interface. 
+            The results are based on image analysis patterns, not a trained AI model.
+            <br><br>
+            <small>💡 <strong>Note:</strong> To enable real AI predictions, train the model and add the model file.</small>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Demo mode prediction function
     def create_demo_prediction(image_array, image_size=(256, 256)):
@@ -247,23 +293,45 @@ def main():
     with col1:
         st.header("📤 Upload Image")
         
-        # Example image selector
+        # Example image selector - More prominent and accessible
         if example_images:
-            st.info(f"💡 **{len(example_images)} example images available!** Try one below or upload your own.")
-            col_ex1, col_ex2 = st.columns(2)
-            with col_ex1:
-                if st.button("📷 Try Example Image 1", use_container_width=True):
-                    example_path = os.path.join(test_dir, example_images[0])
+            st.markdown("---")
+            st.markdown("### 🎯 Quick Start - Try Example Images")
+            st.info(f"**{len(example_images)} sample images available!** No need to upload - click any button below to try the demo instantly.")
+            
+            # Show more example options
+            st.markdown("**Select an example image:**")
+            
+            # Create a grid of example buttons
+            num_examples_to_show = min(6, len(example_images))
+            cols = st.columns(3)
+            
+            for idx in range(num_examples_to_show):
+                with cols[idx % 3]:
+                    img_name = example_images[idx]
+                    if st.button(f"📷 Example {idx+1}", key=f"example_{idx}", use_container_width=True):
+                        example_path = os.path.join(test_dir, img_name)
+                        st.session_state['use_example'] = example_path
+                        st.rerun()
+            
+            # Show random example button
+            if len(example_images) > num_examples_to_show:
+                if st.button("🎲 Try Random Example", use_container_width=True, type="secondary"):
+                    import random
+                    random_img = random.choice(example_images)
+                    example_path = os.path.join(test_dir, random_img)
                     st.session_state['use_example'] = example_path
-            with col_ex2:
-                if len(example_images) > 1 and st.button("📷 Try Example Image 2", use_container_width=True):
-                    example_path = os.path.join(test_dir, example_images[1])
-                    st.session_state['use_example'] = example_path
+                    st.rerun()
+            
+            st.markdown("---")
+            st.markdown("### 📁 Or Upload Your Own Image")
+        else:
+            st.markdown("### 📁 Upload Your Image")
         
         uploaded_file = st.file_uploader(
-            "Or upload your own breast ultrasound image",
+            "Choose a breast ultrasound image (PNG, JPG, JPEG)",
             type=['png', 'jpg', 'jpeg'],
-            help="Upload a grayscale or color breast ultrasound image"
+            help="Upload your own breast ultrasound image or use the example images above"
         )
         
         # Handle example image
@@ -280,9 +348,10 @@ def main():
             
             # Determine caption
             if 'use_example' in st.session_state and st.session_state['use_example']:
-                caption = f"Example Image: {os.path.basename(st.session_state['use_example'])}"
+                caption = f"📷 Example Image: {os.path.basename(st.session_state['use_example'])}"
+                st.success(f"✅ Using example image: **{os.path.basename(st.session_state['use_example'])}**")
             else:
-                caption = "Uploaded Image"
+                caption = "📁 Your Uploaded Image"
             
             st.image(image, caption=caption, use_container_width=True)
             
@@ -357,30 +426,31 @@ def main():
             }
             st.bar_chart(prob_dict)
         else:
-            st.info("👆 **Try it now!**")
+            st.markdown("### 👋 Welcome to OncoVision!")
             st.markdown("""
-            **Option 1:** Click "Try Example Image" buttons above to test with sample images  
-            **Option 2:** Upload your own breast ultrasound image  
-            **Option 3:** Upload any image to see how the segmentation works
+            **Get started in 3 easy steps:**
+            
+            1. **📷 Choose an example image** - Click any "Example" button on the left (no upload needed!)
+            2. **🔍 Click "Analyze Image"** - Process the image to see segmentation
+            3. **📊 View results** - See colored overlays showing different tissue types
+            
+            ---
+            
+            **What you'll see:**
+            - 🟢 **Green areas** = Benign tumors
+            - 🔴 **Red areas** = Malignant tumors  
+            - ⚫ **Black areas** = Background tissue
+            
+            **Statistics included:**
+            - Percentage of each tissue type
+            - Class probabilities
+            - Visual segmentation overlay
             """)
             
-            # Show preview of what to expect
             if example_images:
                 st.markdown("---")
-                st.markdown("### 📸 Sample Images Available")
-                # Show thumbnails of first few examples
-                cols = st.columns(min(3, len(example_images)))
-                for idx, img_name in enumerate(example_images[:3]):
-                    with cols[idx % 3]:
-                        img_path = os.path.join(test_dir, img_name)
-                        if os.path.exists(img_path):
-                            try:
-                                preview_img = Image.open(img_path)
-                                # Resize for thumbnail
-                                preview_img.thumbnail((150, 150))
-                                st.image(preview_img, caption=img_name, use_container_width=True)
-                            except:
-                                pass
+                st.markdown(f"### 📸 {len(example_images)} Example Images Ready")
+                st.info(f"💡 **Tip:** All {len(example_images)} example images are available in the upload section. Click any example button to try them!")
     
     # Footer
     st.markdown("---")
