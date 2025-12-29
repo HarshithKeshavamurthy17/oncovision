@@ -1,6 +1,10 @@
-# Core ML dependencies
-# Force CPU-only PyTorch for Railway (no CUDA libraries = faster build)
+# Railway-optimized requirements (CPU-only, no CUDA)
+# This file forces CPU-only PyTorch installation
+
+# Force CPU-only PyTorch - use PyTorch CPU index
 --extra-index-url https://download.pytorch.org/whl/cpu
+
+# Core ML dependencies - CPU versions only
 torch>=2.0.0,<3.0.0
 torchvision>=0.15.0,<1.0.0
 segmentation-models-pytorch>=0.3.3
@@ -19,11 +23,9 @@ matplotlib>=3.7.0
 
 # Demo frameworks
 streamlit>=1.28.0
-# gradio>=4.0.0  # Removed - not needed for Streamlit app, saves build time
+# gradio>=4.0.0  # Commented out - not needed for Streamlit app, saves build time
 
 # Utilities
 tqdm>=4.65.0
 scikit-learn>=1.3.0
 
-# Additional dependencies for Railway deployment
-# (urllib, ssl, random, io, os, sys are built-in Python modules)

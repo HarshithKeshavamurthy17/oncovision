@@ -1,5 +1,6 @@
 # Core ML dependencies - CPU-only for Railway (faster install)
-# Note: Railway free tier doesn't have GPU, so CPU-only PyTorch is sufficient
+# Force CPU-only PyTorch (no CUDA libraries = faster build)
+--extra-index-url https://download.pytorch.org/whl/cpu
 torch>=2.0.0,<3.0.0
 torchvision>=0.15.0,<1.0.0
 segmentation-models-pytorch>=0.3.3

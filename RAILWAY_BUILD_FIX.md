@@ -55,13 +55,45 @@ Make sure these are set correctly:
 - **Version constraints** prevent pulling latest versions that might have CUDA
 - **Smaller requirements** = faster build = no timeout
 
-## ⚠️ If Still Timing Out
+## ⚠️ If Still Timing Out (AGGRESSIVE FIX)
 
-1. Check Railway build logs for specific errors
-2. Try removing `gradio` from requirements (if not using it)
-3. Consider using a lighter model or demo mode only
+If build is still timing out after setting root directory to `demo`, try this:
+
+### Option 3: Use Custom Build Command
+
+1. In Railway **Settings** → **Build Command**, set:
+   ```bash
+   pip install --no-cache-dir -r demo/requirements.txt
+   ```
+
+2. This forces Railway to use the optimized `demo/requirements.txt`
+
+### Option 4: Remove Heavy Dependencies Temporarily
+
+Edit `demo/requirements.txt` and comment out:
+- `gradio>=4.0.0` (if not using Gradio interface)
+- This saves significant build time
+
+### Option 5: Use Requirements File with Explicit CPU Index
+
+The `--extra-index-url https://download.pytorch.org/whl/cpu` must be at the **very top** of requirements.txt (before any packages).
+
+### Option 6: Set Build Command to Use Railway-Optimized File
+
+1. Copy `demo/requirements-railway.txt` to root as `requirements.txt`
+2. Or set custom build command:
+   ```bash
+   pip install --no-cache-dir -r demo/requirements-railway.txt
+   ```
+
+## 🔍 Debugging
+
+Check build logs for:
+- Are CUDA libraries still being installed? (nvidia-* packages)
+- Is Railway using the correct requirements file?
+- Is the `--extra-index-url` at the top of the file?
 
 ---
 
-**The key fix:** Set Root Directory to `demo` in Railway settings!
+**CRITICAL:** Make sure Root Directory is set to `demo` in Railway Settings!
 
