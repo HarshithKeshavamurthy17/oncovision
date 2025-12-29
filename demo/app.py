@@ -99,8 +99,14 @@ def load_model():
     
     # If model not found, try downloading from URL (if configured)
     if not model_path:
-        # Check for model URL in secrets or environment
-        model_url = os.environ.get('MODEL_URL') or st.secrets.get('MODEL_URL', None)
+        # Check for model URL in environment or secrets (handle missing secrets gracefully)
+        model_url = os.environ.get('MODEL_URL')
+        if not model_url:
+            try:
+                model_url = st.secrets.get('MODEL_URL', None)
+            except (AttributeError, FileNotFoundError, Exception):
+                # Secrets file doesn't exist or MODEL_URL not in secrets - that's okay
+                model_url = None
         if model_url:
             default_path = "checkpoints/best_model.pth"
             if download_model_from_url(model_url, default_path):
