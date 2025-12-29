@@ -322,3 +322,6 @@ Key technical achievements include multi-class segmentation with 3 classes, stra
 
 **Please create a professional, visually appealing project section in my portfolio that includes all these details, with proper styling, images, and interactive elements similar to my other project showcases.**
 
+
+
+

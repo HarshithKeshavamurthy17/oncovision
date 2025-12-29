@@ -61,3 +61,6 @@ class InferenceConfig:
     image_size: Tuple[int, int] = (256, 256)
     device: str = "cuda"
 
+
+
+

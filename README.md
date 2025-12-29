@@ -8,7 +8,7 @@
 
 **Deep Learning-based Multi-class Segmentation for Breast Ultrasound Images**
 
-[Features](#features) • [Installation](#installation) • [Usage](#usage) • [Project Structure](#project-structure) • [Results](#results)
+[Features](#features) • [Installation](#installation) • [Usage](#usage) • [Deployment](#-deployment) • [Project Structure](#project-structure) • [Results](#results)
 
 </div>
 
@@ -82,7 +82,11 @@ This project is designed for medical image analysis and can be used as a tool to
 
 ### 🚀 Live Demo
 
-Try the interactive web demo:
+**🌐 Try the live demo:** [https://oncovision.up.railway.app](https://oncovision.up.railway.app)
+
+💡 **Note:** This app uses Railway's free tier. If it hasn't been visited recently, it may take 10-30 seconds to wake up. This is normal behavior for free hosting.
+
+**Local Demo:**
 
 ```bash
 # Streamlit Demo
@@ -92,7 +96,13 @@ streamlit run demo/app.py
 python demo/gradio_app.py
 ```
 
-For deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md)
+### 🚢 Deployment
+
+This project is deployed on Railway.app. For detailed deployment instructions, see:
+- **[RAILWAY_DEPLOYMENT.md](./RAILWAY_DEPLOYMENT.md)** - Complete Railway deployment guide
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Alternative deployment options (Streamlit Cloud, Heroku, etc.)
+- **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - Deployment checklist
+- **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** - Common issues and solutions
 
 ### Training
 
@@ -255,10 +265,11 @@ For questions or suggestions, please open an issue on GitHub.
 
 ## 🎯 Future Improvements
 
+- [x] Web interface for inference (Streamlit & Gradio)
+- [x] Railway deployment
 - [ ] Support for additional encoder architectures
 - [ ] Test-time augmentation
 - [ ] Model ensemble capabilities
-- [ ] Web interface for inference
 - [ ] Docker containerization
 - [ ] API endpoint for real-time predictions
 

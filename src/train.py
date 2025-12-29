@@ -285,3 +285,6 @@ if __name__ == "__main__":
     # Evaluate model
     evaluate_model(trained_model, val_loader, criterion, device=device)
 
+
+
+
